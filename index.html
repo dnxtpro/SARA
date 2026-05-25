@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>Acceso privado</title>
+  <style>
+    :root {
+      --bg: #07110c;
+      --bg-soft: #0b1711;
+      --panel: rgba(10, 22, 16, 0.78);
+      --panel-strong: rgba(7, 17, 12, 0.92);
+      --line: rgba(183, 255, 131, 0.16);
+      --line-strong: rgba(183, 255, 131, 0.34);
+      --text: #eef7ec;
+      --muted: rgba(238, 247, 236, 0.66);
+      --muted-soft: rgba(238, 247, 236, 0.46);
+      --accent: #b7ff83;
+      --accent-deep: #6fcf4a;
+      --accent-glow: rgba(183, 255, 131, 0.22);
+      --danger: #ffb7c2;
+      --shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+      --radius: 28px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 18% 18%, rgba(183, 255, 131, 0.12), transparent 30%),
+        radial-gradient(circle at 82% 12%, rgba(111, 207, 74, 0.08), transparent 24%),
+        radial-gradient(circle at 50% 100%, rgba(183, 255, 131, 0.06), transparent 35%),
+        linear-gradient(180deg, #050a08 0%, var(--bg) 48%, #050907 100%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: linear-gradient(180deg, rgba(0,0,0,0.22), rgba(0,0,0,0.02));
+      opacity: 0.18;
+    }
+
+    .page {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      position: relative;
+    }
+
+    .card {
+      width: min(100%, 560px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(12, 24, 18, 0.82), rgba(7, 17, 12, 0.9));
+      box-shadow: var(--shadow), 0 0 0 1px rgba(183, 255, 131, 0.04) inset;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: clamp(24px, 5vw, 40px);
+      position: relative;
+      overflow: hidden;
+      animation: rise 900ms cubic-bezier(.2,.8,.2,1) both;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(183, 255, 131, 0.26), transparent 34%, transparent 64%, rgba(183, 255, 131, 0.14));
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: -40% -20% auto;
+      height: 240px;
+      background: radial-gradient(circle, rgba(183, 255, 131, 0.12), transparent 60%);
+      filter: blur(14px);
+      pointer-events: none;
+      opacity: 0.8;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border: 1px solid rgba(183, 255, 131, 0.16);
+      border-radius: 999px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      font-size: 11px;
+      line-height: 1;
+      background: rgba(183, 255, 131, 0.04);
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 18px var(--accent-glow);
+    }
+
+    h1 {
+      margin: 18px 0 10px;
+      font-size: clamp(32px, 6vw, 54px);
+      line-height: 0.95;
+      letter-spacing: -0.05em;
+      font-weight: 650;
+    }
+
+    .subtitle {
+      margin: 0;
+      max-width: 38ch;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .form {
+      display: grid;
+      gap: 14px;
+      margin-top: 26px;
+    }
+
+    .field {
+      position: relative;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(2, 8, 5, 0.58);
+      color: var(--text);
+      padding: 18px 18px 18px 52px;
+      min-height: 64px;
+      font-size: 18px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      outline: none;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset;
+      transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease, background .22s ease;
+    }
+
+    input::placeholder {
+      color: rgba(238, 247, 236, 0.25);
+      letter-spacing: 0.12em;
+      text-transform: none;
+    }
+
+    input:focus {
+      border-color: var(--line-strong);
+      box-shadow: 0 0 0 4px rgba(183, 255, 131, 0.08), 0 0 0 1px rgba(183, 255, 131, 0.06) inset;
+      background: rgba(5, 11, 8, 0.78);
+      transform: translateY(-1px);
+    }
+
+    .lock {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      border: 1.5px solid rgba(183, 255, 131, 0.42);
+      border-radius: 5px;
+      opacity: 0.9;
+    }
+
+    .lock::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -8px;
+      width: 11px;
+      height: 9px;
+      border: 1.5px solid rgba(183, 255, 131, 0.42);
+      border-bottom: 0;
+      border-radius: 10px 10px 0 0;
+      transform: translateX(-50%);
+      background: transparent;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      min-height: 48px;
+      padding: 0 18px;
+      background: linear-gradient(180deg, #d3ffab 0%, #b7ff83 100%);
+      color: #08100b;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 12px 28px rgba(183, 255, 131, 0.18);
+      transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 32px rgba(183, 255, 131, 0.22);
+      filter: saturate(1.04);
+    }
+
+    button:active {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    .hint {
+      color: var(--muted-soft);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      flex: 1 1 220px;
+    }
+
+    .message {
+      min-height: 22px;
+      margin-top: 2px;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--muted);
+      transition: opacity .2s ease, transform .2s ease, color .2s ease;
+    }
+
+    .message.error {
+      color: var(--danger);
+    }
+
+    .message.success {
+      color: var(--accent);
+    }
+
+    .video-wrap {
+      margin-top: 24px;
+      padding: 16px;
+      border-radius: 22px;
+      border: 1px solid rgba(183, 255, 131, 0.16);
+      background: linear-gradient(180deg, rgba(183, 255, 131, 0.04), rgba(183, 255, 131, 0.02));
+      display: none;
+      position: relative;
+      overflow: hidden;
+      animation: reveal 700ms ease both;
+    }
+
+    .video-wrap.is-visible {
+      display: block;
+    }
+
+    .video-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .video-title {
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .video-status {
+      font-size: 12px;
+      color: var(--muted-soft);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .video-placeholder {
+      min-height: 220px;
+      border-radius: 18px;
+      border: 1px solid rgba(183, 255, 131, 0.16);
+      background:
+        radial-gradient(circle at 25% 25%, rgba(183, 255, 131, 0.14), transparent 28%),
+        linear-gradient(180deg, rgba(5, 12, 8, 0.92), rgba(11, 23, 16, 0.88));
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 28px;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .video-placeholder::before {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border: 1px dashed rgba(183, 255, 131, 0.18);
+      border-radius: 14px;
+      pointer-events: none;
+    }
+
+    .placeholder-copy {
+      position: relative;
+      z-index: 1;
+      max-width: 26ch;
+    }
+
+    .placeholder-copy strong {
+      display: block;
+      font-size: clamp(18px, 3vw, 24px);
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: 10px;
+    }
+
+    .placeholder-copy span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .countdown {
+      margin-top: 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted-soft);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .countdown::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent-deep);
+      box-shadow: 0 0 0 6px rgba(111, 207, 74, 0.08);
+    }
+
+    .shake {
+      animation: shake 420ms ease;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(18px) scale(0.985); filter: blur(6px); }
+      to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    }
+
+    @keyframes reveal {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-4px); }
+      40% { transform: translateX(4px); }
+      60% { transform: translateX(-2px); }
+      80% { transform: translateX(2px); }
+    }
+
+    @media (max-width: 520px) {
+      .card {
+        border-radius: 24px;
+      }
+
+      h1 {
+        font-size: clamp(28px, 10vw, 42px);
+      }
+
+      input {
+        letter-spacing: 0.22em;
+        font-size: 16px;
+      }
+
+      .actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      button {
+        width: 100%;
+      }
+
+      .hint {
+        flex-basis: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="card" aria-label="Acceso privado">
+      <div class="eyebrow">acceso privado</div>
+      <h1>Sorpresa íntima</h1>
+      <p class="subtitle">Escribe la palabra correcta para abrirlo. Hay una fecha concreta y no va a adelantarse.</p>
+
+      <form class="form" id="unlockForm" autocomplete="off" novalidate>
+        <div class="field">
+          <span class="lock" aria-hidden="true"></span>
+          <input
+            id="secretInput"
+            name="secret"
+            type="text"
+            inputmode="text"
+            spellcheck="false"
+            autocapitalize="characters"
+            autocomplete="off"
+            placeholder="AMIGO"
+            aria-label="Palabra secreta"
+          />
+        </div>
+
+        <div class="actions">
+          <button type="submit">Desbloquear</button>
+          <div class="hint" id="availabilityHint">Disponible el 3 de junio</div>
+        </div>
+
+        <div class="message" id="feedback" aria-live="polite"></div>
+      </form>
+
+      <div class="video-wrap" id="videoSection" aria-live="polite">
+        <div class="video-top">
+          <p class="video-title">Vídeo sorpresa</p>
+          <span class="video-status">listo para el 3 de junio</span>
+        </div>
+        <div class="video-placeholder" id="videoPlaceholder">
+          <div class="placeholder-copy">
+            <strong>Aquí aparecerá el vídeo</strong>
+            <span>Vídeo sorpresa disponible el 3 de junio.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="countdown" id="dateNote">Acceso especial a partir del 3 de junio</div>
+    </div>
+  </div>
+
+  <script>
+    // palabra secreta
+    const SECRET_WORD = 'AMIGO';
+    // fecha de desbloqueo
+    const UNLOCK_MONTH = 5; // junio en JavaScript es 5
+    const UNLOCK_DAY = 3;
+    // URL futura del vídeo
+    const VIDEO_URL = '';
+
+    const form = document.getElementById('unlockForm');
+    const input = document.getElementById('secretInput');
+    const feedback = document.getElementById('feedback');
+    const videoSection = document.getElementById('videoSection');
+    const videoPlaceholder = document.getElementById('videoPlaceholder');
+    const availabilityHint = document.getElementById('availabilityHint');
+    const dateNote = document.getElementById('dateNote');
+    const card = document.querySelector('.card');
+
+    function isUnlockedDate(now = new Date()) {
+      const year = now.getFullYear();
+      const unlockDate = new Date(year, UNLOCK_MONTH, UNLOCK_DAY, 0, 0, 0, 0);
+      return now >= unlockDate;
+    }
+
+    function setFeedback(text, kind) {
+      feedback.textContent = text;
+      feedback.className = `message ${kind || ''}`.trim();
+    }
+
+    function renderVideoArea() {
+      videoSection.classList.add('is-visible');
+      if (VIDEO_URL) {
+        videoPlaceholder.textContent = '';
+        const video = document.createElement('video');
+        video.controls = true;
+        video.playsInline = true;
+        video.src = VIDEO_URL;
+        video.style.cssText = 'width:100%;height:100%;min-height:220px;max-height:520px;border-radius:18px;background:#000;display:block;object-fit:cover;';
+        videoPlaceholder.appendChild(video);
+      } else {
+        videoPlaceholder.innerHTML = '';
+        const copy = document.createElement('div');
+        copy.className = 'placeholder-copy';
+        const title = document.createElement('strong');
+        title.textContent = 'Aquí aparecerá el vídeo';
+        const text = document.createElement('span');
+        text.textContent = 'Vídeo sorpresa disponible el 3 de junio.';
+        copy.appendChild(title);
+        copy.appendChild(text);
+        videoPlaceholder.appendChild(copy);
+      }
+    }
+
+    function unlock() {
+      const value = input.value.trim().toUpperCase();
+      const dateReady = isUnlockedDate();
+
+      if (value !== SECRET_WORD) {
+        setFeedback('La palabra no abre este acceso.', 'error');
+        card.classList.remove('shake');
+        void card.offsetWidth;
+        card.classList.add('shake');
+        return;
+      }
+
+      if (!dateReady) {
+        setFeedback('La sorpresa se desbloquea el 3 de junio. Aún no está lista.', 'success');
+        videoSection.classList.remove('is-visible');
+        return;
+      }
+
+      setFeedback('Listo. Ya puedes ver la sorpresa.', 'success');
+      renderVideoArea();
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      unlock();
+    });
+
+    input.addEventListener('input', () => {
+      feedback.textContent = '';
+      feedback.className = 'message';
+    });
+
+    const ready = isUnlockedDate();
+    availabilityHint.textContent = ready ? 'Disponible ahora' : 'Disponible el 3 de junio';
+    dateNote.textContent = ready ? 'Acceso abierto hoy' : 'Acceso especial a partir del 3 de junio';
+  </script>
+</body>
+</html>
