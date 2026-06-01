@@ -66,7 +66,7 @@
     }
 
     .card {
-      width: min(100%, 560px);
+      width: min(100%, 960px);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       background: linear-gradient(180deg, rgba(12, 24, 18, 0.82), rgba(7, 17, 12, 0.9));
@@ -226,7 +226,11 @@
       text-transform: uppercase;
       cursor: pointer;
       box-shadow: 0 12px 28px rgba(183, 255, 131, 0.18);
+      --escape-x: 0px;
+      --escape-y: 0px;
+      transform: translate(var(--escape-x), var(--escape-y));
       transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+      will-change: transform;
     }
 
     button:hover {
@@ -237,6 +241,10 @@
 
     button:active {
       transform: translateY(1px) scale(0.99);
+    }
+
+    button.is-escaping {
+      transition: transform .24s cubic-bezier(.2,.8,.2,1), box-shadow .18s ease, filter .18s ease;
     }
 
     .hint {
@@ -304,7 +312,7 @@
     }
 
     .video-placeholder {
-      min-height: 220px;
+      min-height: 320px;
       border-radius: 18px;
       border: 1px solid rgba(183, 255, 131, 0.16);
       background:
@@ -423,8 +431,8 @@
   <div class="page">
     <div class="card" aria-label="Acceso privado">
       <div class="eyebrow">acceso privado</div>
-      <h1>Sorpresa íntima</h1>
-      <p class="subtitle">Escribe la palabra correcta para abrirlo. Hay una fecha concreta y no va a adelantarse.</p>
+      <h1>Regalo pa la beibi, hasta el 3 de junio nada</h1>
+      <p class="subtitle">Escribe la palabra correcta para abrirlo. Qué palabra te pondríamos nosotros?</p>
 
       <form class="form" id="unlockForm" autocomplete="off" novalidate>
         <div class="field">
@@ -473,8 +481,8 @@
     // fecha de desbloqueo
     const UNLOCK_MONTH = 5; // junio en JavaScript es 5
     const UNLOCK_DAY = 3;
-    // URL futura del vídeo
-    const VIDEO_URL = '';
+    // URL futura del vídeo (ruta local o remota). Edita aquí si lo cambias.
+    const VIDEO_URL = 'sarita2.mp4';
 
     const form = document.getElementById('unlockForm');
     const input = document.getElementById('secretInput');
@@ -484,6 +492,7 @@
     const availabilityHint = document.getElementById('availabilityHint');
     const dateNote = document.getElementById('dateNote');
     const card = document.querySelector('.card');
+    const unlockButton = form.querySelector('button[type="submit"]');
 
     function isUnlockedDate(now = new Date()) {
       const year = now.getFullYear();
@@ -496,6 +505,21 @@
       feedback.className = `message ${kind || ''}`.trim();
     }
 
+    function moveEscapeButton() {
+      if (isUnlockedDate()) {
+        unlockButton.style.setProperty('--escape-x', '0px');
+        unlockButton.style.setProperty('--escape-y', '0px');
+        unlockButton.classList.remove('is-escaping');
+        return;
+      }
+
+      const x = Math.round((Math.random() * 2 - 1) * 120);
+      const y = Math.round((Math.random() * 2 - 1) * 22);
+      unlockButton.style.setProperty('--escape-x', `${x}px`);
+      unlockButton.style.setProperty('--escape-y', `${y}px`);
+      unlockButton.classList.add('is-escaping');
+    }
+
     function renderVideoArea() {
       videoSection.classList.add('is-visible');
       if (VIDEO_URL) {
@@ -503,8 +527,11 @@
         const video = document.createElement('video');
         video.controls = true;
         video.playsInline = true;
+        // Carga mínima de metadatos para mostrar duración/previews sin descargar todo el archivo
+        video.preload = 'metadata';
         video.src = VIDEO_URL;
-        video.style.cssText = 'width:100%;height:100%;min-height:220px;max-height:520px;border-radius:18px;background:#000;display:block;object-fit:cover;';
+        // Hacemos el vídeo más generoso en altura para que ocupe más presencia visual
+        video.style.cssText = 'width:100%;height:100%;min-height:320px;max-height:820px;border-radius:18px;background:#000;display:block;object-fit:cover;';
         videoPlaceholder.appendChild(video);
       } else {
         videoPlaceholder.innerHTML = '';
@@ -545,6 +572,34 @@
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       unlock();
+    });
+
+    unlockButton.addEventListener('pointerenter', (event) => {
+      if (event.pointerType === 'mouse' && !isUnlockedDate()) {
+        moveEscapeButton();
+      }
+    });
+
+    unlockButton.addEventListener('focus', () => {
+      if (isUnlockedDate()) {
+        unlockButton.style.setProperty('--escape-x', '0px');
+        unlockButton.style.setProperty('--escape-y', '0px');
+      }
+    });
+
+    form.addEventListener('pointermove', (event) => {
+      if (event.pointerType !== 'mouse' || isUnlockedDate()) {
+        return;
+      }
+
+      const buttonRect = unlockButton.getBoundingClientRect();
+      const dx = event.clientX - (buttonRect.left + buttonRect.width / 2);
+      const dy = event.clientY - (buttonRect.top + buttonRect.height / 2);
+      const distance = Math.hypot(dx, dy);
+
+      if (distance < 140) {
+        moveEscapeButton();
+      }
     });
 
     input.addEventListener('input', () => {
