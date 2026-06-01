@@ -255,6 +255,13 @@
       flex: 1 1 220px;
     }
 
+    .mobile-note {
+      display: none;
+      color: var(--muted-soft);
+      font-size: 12px;
+      text-align: right;
+    }
+
     .message {
       min-height: 22px;
       margin-top: 2px;
@@ -282,6 +289,51 @@
       position: relative;
       overflow: hidden;
       animation: reveal 700ms ease both;
+    }
+
+    .share-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 14px;
+      align-items: center;
+    }
+
+    .share-actions a,
+    .share-actions button {
+      background: transparent;
+      border: 1px solid rgba(183,255,131,0.12);
+      color: var(--accent);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .lyrics {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(6,12,8,0.48);
+      border: 1px solid rgba(183,255,131,0.06);
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 360ms ease, opacity 360ms ease;
+      opacity: 0;
+    }
+
+    .lyrics.open {
+      opacity: 1;
+      max-height: 640px;
+    }
+
+    .lyrics pre {
+      margin: 0;
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
     }
 
     .video-wrap.is-visible {
@@ -403,6 +455,10 @@
         border-radius: 24px;
       }
 
+      .mobile-note {
+        display: block;
+      }
+
       h1 {
         font-size: clamp(28px, 10vw, 42px);
       }
@@ -452,7 +508,10 @@
 
         <div class="actions">
           <button type="submit">Desbloquear</button>
-          <div class="hint" id="availabilityHint">Disponible el 3 de junio</div>
+          <div style="display:flex;gap:12px;align-items:center;flex:1;justify-content:flex-end;">
+            <div class="hint" id="availabilityHint">Disponible el 3 de junio</div>
+            <div class="mobile-note">Se ve mejor en ordenador</div>
+          </div>
         </div>
 
         <div class="message" id="feedback" aria-live="polite"></div>
@@ -469,6 +528,14 @@
             <span>Vídeo sorpresa disponible el 3 de junio.</span>
           </div>
         </div>
+        <div class="share-actions" id="shareActions" style="display:none;">
+          <a id="whatsappShare" href="#" target="_blank" rel="noopener">Compartir (WhatsApp)</a>
+          <a id="downloadVideo" href="#" download>Descargar</a>
+          <button id="toggleLyricsBtn" type="button">Letra</button>
+        </div>
+        <div class="lyrics" id="lyricsBlock" aria-hidden="true">
+          <pre id="lyricsText"></pre>
+        </div>
       </div>
 
       <div class="countdown" id="dateNote">Acceso especial a partir del 3 de junio</div>
@@ -479,7 +546,7 @@
     // palabra secreta
     const SECRET_WORD = 'AMIGO';
     // fecha de desbloqueo
-    const UNLOCK_MONTH = 4; // junio en JavaScript es 5
+    const UNLOCK_MONTH = 5; // junio en JavaScript es 5
     const UNLOCK_DAY = 3;
     // URL futura del vídeo (ruta local o remota). Edita aquí si lo cambias.
     const VIDEO_URL = 'sarita2.mp4';
@@ -545,6 +612,76 @@
         copy.appendChild(text);
         videoPlaceholder.appendChild(copy);
       }
+        // Mostrar acciones de compartir/descarga y preparar enlaces
+        const shareActions = document.getElementById('shareActions');
+        const whatsappShare = document.getElementById('whatsappShare');
+        const downloadVideo = document.getElementById('downloadVideo');
+        const toggleLyricsBtn = document.getElementById('toggleLyricsBtn');
+        const lyricsBlock = document.getElementById('lyricsBlock');
+        const lyricsText = document.getElementById('lyricsText');
+
+        // Letra (insertada desde aquí; puedes editar directamente el texto)
+        const lyrics = `Quince de julio
+  11 de la mañana
+  La playa vacía
+  Y el sol la abraza
+
+  Un caparazón de tela
+  Sino te asomas no  te lo esperas
+  Nlandita por dentro
+  Huevo de oro en un nido
+
+  Guarda su colgante
+  Invisible para el resto
+  Moneda sin intercambio
+  Un almacén de recuerdos
+
+  Y su forma de quedarse
+  Como escucha atentamente
+  Y su forma de acordarse
+  Eso también es querer
+
+  Y su forma de quedarse
+  Como escucha atentamente
+  Y su forma de acordarse
+  Eso también es querer
+ 
+  Se enamoró de la playa
+  El mar la reclama
+  La brisa le acaricia
+  Cada tarde en kabila
+     
+  Un 2020 complicado
+  Mascarillas de extrarradio
+  Despedidas indeseadas
+  Caparazones Fabri cados
+
+  Y alguna forma de compartir el video por whatsapp o descargarlo aunque sea en el movil`;
+
+        // Rellenar letra
+        lyricsText.textContent = lyrics;
+
+        // Construir URL absoluta del vídeo si es relativa
+        function getVideoFullUrl() {
+          try {
+            return new URL(VIDEO_URL || window.location.href, window.location.href).toString();
+          } catch (e) {
+            return window.location.href;
+          }
+        }
+
+        const fullVideoUrl = getVideoFullUrl();
+
+        whatsappShare.href = `https://wa.me/?text=${encodeURIComponent('Mira esta sorpresa: ' + fullVideoUrl)}`;
+        downloadVideo.href = fullVideoUrl;
+        shareActions.style.display = 'flex';
+
+        // Toggle letra
+        toggleLyricsBtn.addEventListener('click', () => {
+          const open = lyricsBlock.classList.toggle('open');
+          lyricsBlock.setAttribute('aria-hidden', !open);
+          if (open) toggleLyricsBtn.textContent = 'Cerrar letra'; else toggleLyricsBtn.textContent = 'Letra';
+        });
     }
 
     function unlock() {
